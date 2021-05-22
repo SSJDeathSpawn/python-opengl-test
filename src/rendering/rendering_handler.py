@@ -6,6 +6,7 @@ from .renderers import shapes
 from .rendering_registry import Renderer, RenderRegistry
 from ..basics.shaders import ShaderProgram
 from .renders import BaseRenderLoader, MainRenderLoader
+from ..exceptions import InvalidRendererException
 from typing import Type
 
 logger = Logger("Rendering Handler")
@@ -53,11 +54,13 @@ class RenderHandler(object):
 			else:
 				logger.log_warning(f"Render {render['name']} has an invalid base {render['base']}")
 
-	# TODO: Add check for whether in Rendering Registry
 	def render(self, name: str, shader:ShaderProgram) -> None:
-		#logger.log_info(self.converted_renders)
 		try:
-			self.converted_renders[name].render(shader)
+			#logger.log_info(self.rendering_registry.is_valid_renderer(self.converted_renders[name]))
+			if(self.rendering_registry.is_valid_renderer(self.converted_renders[name])):
+				self.converted_renders[name].render(shader)
+			else:
+				raise InvalidRendererException(self.converted_renders['name'])
 		except(KeyError):
 			#logger.log_warning(f"Render {name} not found")
 			pass

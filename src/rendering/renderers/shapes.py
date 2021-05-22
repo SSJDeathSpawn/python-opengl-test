@@ -54,7 +54,6 @@ class Polygon(Shape):
 	#Uses the ear method
 
 	def triangulate(self, pos:list) -> list:
-		#TODO: Fix this,
 		pointer = 1
 		indices = []
 		length = len(pos)

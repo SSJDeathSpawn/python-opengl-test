@@ -9,6 +9,7 @@ from .constants import *
 from .rendering.rendering_registry import RenderRegistry
 from .rendering.rendering_handler import RenderHandler
 from .basics.shaders import ShaderProgram, Shader
+from .rendering.renderers.shapes import *
 import time
 import os
 
@@ -20,6 +21,11 @@ logger = Logger("Application Main")
 
 class Application(object):
 
+	renderers = [
+		Shape,
+		Polygon
+	]
+
 	def render(self):
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 		self.render_handler.render('Basic Rectangle', self.shader_program)
@@ -29,6 +35,7 @@ class Application(object):
 		logger.log_info("Initialization step")
 		start_time = time.time()
 		self.render_handler = RenderHandler()
+		[self.render_handler.register_renderer(i) for i in self.renderers]
 		self.render_handler.load_renders()
 		self.screen = Screen("Project", (SCREEN_WIDTH, SCREEN_HEIGHT), self.render)
 		self.render_handler.convert_renders()

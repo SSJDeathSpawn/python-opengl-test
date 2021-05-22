@@ -20,6 +20,10 @@ class RenderRegistry(object):
 		#Add a renderer to the list of acceptable renderers
 		self._registered_renderers.append(renderer)
 
+	#Check if the given renderer is in the list of acceptable renderers
+	def is_valid_renderer(self, renderer):
+		return type(renderer) in self._registered_renderers
+
 	# def render_all(self, shader: ShaderProgram) -> None:
 	# 	#Every acceptale renderer should render on screen with no exception (not optimal)
 	# 	for renderer in self._registered_renderers:
