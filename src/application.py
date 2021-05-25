@@ -21,31 +21,40 @@ logger = Logger("Application Main")
 
 class Application(object):
 
-	renderers = [
+	internal_renderers = [
 		Shape,
-		Polygon
+		Polygon,
+		MultiplePolygons
 	]
 
+	# [ [function1, kwargs1],
+	#	[function2, kwargs2] ]
+	render_calls = []
+
+	#Render whatever the game tells you to
 	def render(self):
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-		self.render_handler.render('Basic Rectangle', self.shader_program)
+		[i[0](**i[1]) for i in self.render_calls]
 		self.screen.swap_buffers()
 
+	#Do stuff like initializing the screen and load all the available render files
+	#All the game related stuff should be done in game.py
 	def __init__(self):
 		logger.log_info("Initialization step")
 		start_time = time.time()
 		self.render_handler = RenderHandler()
-		[self.render_handler.register_renderer(i) for i in self.renderers]
+		[self.render_handler.register_renderer(i) for i in self.internal_renderers]
 		self.render_handler.load_renders()
 		self.screen = Screen("Project", (SCREEN_WIDTH, SCREEN_HEIGHT), self.render)
 		self.render_handler.convert_renders()
 		self.screen.clear(0,0.1,0.1,1)
-		self.shader_program = self.compile_shaders()
-		self.run()
+		self.default_shader = self.compile_shaders()
 
+	#Convenience function to get render_handler
 	def get_render_handler(self):
 		return self.render_handler
 
+	#TODO: Accpet vertex and fragment shaders as arguments
 	def compile_shaders(self):
 		logger.log_info("Compiling shaders...")
 		vertex = Shader('../res/shaders/vertex.glsl', GL_VERTEX_SHADER)

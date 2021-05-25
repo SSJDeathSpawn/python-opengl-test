@@ -23,6 +23,6 @@ except(ImportError):
 if should_exit:
 	exit()
 
-from . import application, logger, constants, basics, rendering
+from . import application, logger, constants, basics, rendering, game
 
-__all__ = ['logger', 'application', 'constants', 'basics', 'rendering']
+__all__ = ['logger', 'application', 'constants', 'basics', 'rendering', 'game']

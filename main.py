@@ -2,4 +2,4 @@
 
 import src
 
-app = src.application.Application()
+app = src.game.game.Game()

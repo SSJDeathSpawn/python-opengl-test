@@ -3,6 +3,8 @@
 from OpenGL.GL import *
 import numpy as np
 
+#Used to give data to OpenGL
+#This is gives data on all the points on the screen
 class VertexBuffer(object):
 
 	def __init__(self):
@@ -22,7 +24,9 @@ class VertexBuffer(object):
 	def __del__(self):
 		glDeleteBuffers(1, self._id)
 
-
+#Used to define the order in which the vertex positions should be drawn
+#Since OpenGL can only render with triangles past like 3.0
+#Lessens repition of data
 class IndexBuffer(object):
 
 	def __init__(self):

@@ -1,4 +1,4 @@
-#basics/shapes.py
+#rendering/renderers/shapes.py
 
 from ...basics.buffers import *
 from OpenGL.GL import *
@@ -8,8 +8,11 @@ from ...basics.vertex_array import *
 from ..rendering_registry import Renderer
 from ...utils import *
 import ctypes
-from itertools import cycle
+import itertools
+from collections import deque
 from ...logger import Logger
+
+logger = Logger('renderers/shapes')
 
 class Shape(Renderer):
 	def __init__(self):
@@ -18,7 +21,8 @@ class Shape(Renderer):
 		self.ib = IndexBuffer()
 
 	def define_shape(self, pos:np.ndarray, indices:np.ndarray, colours:np.ndarray):
-		self.ib.put_data(ctypes.sizeof(GLubyte)*len(indices), indices)
+		logger.log_info(indices)
+		self.ib.put_data(ctypes.sizeof(GLuint)*len(indices), indices)
 		vertex_data = np.array(np.append(pos,colours, axis=1),dtype=np.float32).flatten()
 		self.vb.put_data(len(vertex_data) * ctypes.sizeof(GLfloat), vertex_data)
 		vl = VertexArrayLayout()
@@ -31,44 +35,41 @@ class Shape(Renderer):
 		self.vao.bind()
 		shader.bind()
 		self.ib.bind()
-		glDrawElements(GL_TRIANGLES, self.ib.count, GL_UNSIGNED_BYTE, ctypes.c_void_p(0))
+		glDrawElements(GL_TRIANGLES, self.ib.count, GL_UNSIGNED_INT, ctypes.c_void_p(0))
 		self.ib.unbind()
 		shader.unbind()
 		self.vao.unbind()
 
-logger = Logger('shapes/Polygon')
 class Polygon(Shape):
 	def __init__(self, sides: int, pos: list, col:list):
 		super().__init__()
-		norm_pos = []
-		for i in pos:
-			norm_pos.append(arr2norm(*i))
+		norm_pos = [arr2norm(*i) for i in pos]
 		indices = self.triangulate(norm_pos.copy())
-		self.define_shape(np.array(norm_pos, dtype=np.float32), np.array(indices, dtype=np.uint8), np.array(col, dtype=np.float32))
+		col = [i for i in col] if np.array(col).ndim > 1 else [col]*sides
+		self.define_shape(np.array(norm_pos, dtype=np.float32), np.array(indices, dtype=np.uintc), np.array(col, dtype=np.float32))
 
-	#This one was hard. Actually used 11th grade (equivalent) Maths 
-	#Graphs I made in the process: https://www.desmos.com/calculator/g602w5htdj 
+	#This one in particular had me needing to research 
+	#Graphs I made in the process: 
+	#https://www.desmos.com/calculator/g602w5htdj 
 	#https://www.desmos.com/calculator/tii2fmsh97 (<-- isn't useful, had to use another way)
 	#https://www.desmos.com/calculator/90kixqqskr
 	#This generates the triangle index order with which the polygon should be rendered
 	#Uses the ear method
 
+	#Explanation of the method will be given in my project (hopefully).
+
 	def triangulate(self, pos:list) -> list:
-		pointer = 1
+		pointer = 0
 		indices = []
 		length = len(pos)
 		skip_list=[]
 		while (len(pos) - len(skip_list)) > 2 :
-			pointer_before = pointer-1
+			pointer_before = (pointer-1) % len(pos)  
 			pointer_after = (pointer+1) % len(pos)
 			while pointer_before in skip_list:
-				if pointer_before < 0:
-					pointer_before = len(pos)-1
-				pointer_before -= 1
+				pointer_before = (pointer_before - 1) % len(pos)
 			while pointer_after in skip_list:
-				if pointer_after > (len(pos)-1):
-					pointer_after = 0
-				pointer_after += 1
+				pointer_after = (pointer_after + 1) % len(pos)
 			x1,y1 = pos[pointer_before]
 			x2,y2 = pos[pointer]
 			x3,y3 = pos[pointer_after]
@@ -76,12 +77,17 @@ class Polygon(Shape):
 			#Collinear points
 			if twice_area == 0:
 				skip_list += [pointer]
-				pointer += 1
+				pointer = (pointer + 1) % len(pos)
 			#Convex point
 			elif twice_area < 0:
 				for i in range(len(pos)):
 					#Skip the triangle vertices
-					if (i not in range(pointer_before, pointer_after+1)) and i not in skip_list:
+					d = deque(list(range(len(pos))))
+					d.rotate(-pointer_before)
+					rang = list(itertools.takewhile(lambda x: x!= pointer_after, d))
+					rang.append(pointer_after)
+					logger.log_info(f"{i} is not in {list(rang)}")
+					if (i not in rang) and i not in skip_list:
 						Px,Py = pos[i]
 						#Altered Distance (Point to line) formula (after subbing a,b,c (ax+by+c) from point form of line)
 						v1 = (x2 - x1) * (Py - y2) - (y2 - y1) * (Px - x2)
@@ -92,19 +98,32 @@ class Polygon(Shape):
 							skip_list += [i]
 						#There should be no points inside the triangle
 						if(v1 < 0 and v2 < 0 and v3 < 0):
-							pointer += 1
+							pointer = (pointer + 1) % len(pos)
 							break
 				#No points inside the triangle
 				else:
 					indices += [pointer_before, pointer, pointer_after]
 					#Remove the ear
 					skip_list += [pointer]
-					pointer += 1
+					pointer = (pointer + 1) % len(pos)
 			#Skip if concave
 			elif twice_area > 0:
-				pointer +=1
+				pointer = (pointer + 1) % len(pos)
 			skip_list = list(set(skip_list))
+			#logger.log_info(f"Indices = {indices}")
 		for j in range(len(indices)):
 			if indices[j] < 0:
 				indices[j] = length + indices[j]
 		return indices
+
+#Used to draw multiple non-connected polygons onto the screen
+class MultiplePolygons(Renderer):
+
+	polygons = []
+
+	def __init__(self, count: int, **kwargs):
+		for i in range(1, count+1):
+			self.polygons.append(Polygon(kwargs['side' + str(i)], kwargs['pos' + str(i)], kwargs['col'+str(i)]))
+
+	def render(self, shader: ShaderProgram):
+		[i.render(shader) for i in self.polygons]

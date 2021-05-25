@@ -4,6 +4,7 @@ from OpenGL.GLUT import *
 from OpenGL.GL import *
 from typing import Callable, Tuple, List
 
+#Uses GLUT to initialize a window and sets the OpenGL context (internally) to that window
 class Screen(object):
 
 	xy_tuple = Tuple[int, int]

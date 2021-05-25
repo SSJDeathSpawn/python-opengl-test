@@ -3,7 +3,7 @@ from .buffers import *
 from OpenGL.GL import *
 import ctypes
 
-
+#get size (in bytes) from the GL equivalent
 def get_size_from_type(type):
 	return_dict = {
 	GL_FLOAT: ctypes.sizeof(GLfloat),
@@ -12,6 +12,8 @@ def get_size_from_type(type):
 	}
 	return return_dict[type]
 
+#Used to define interleaved data for the vertex array (not really made for tightly packed data).
+# PCT PCT PCT, not PPP CCC TTT
 class VertexArrayLayout(object):
 	def __init__(self):
 		self.elements = []
@@ -24,6 +26,8 @@ class VertexArrayLayout(object):
 	def get_elements(self):
 		return self.elements.copy()
 
+#Stores the data that is provided to Vertex Buffer. Can be used to instantly load and offload data. 
+#Easier than loading into Vertex Buffer whenever an object is required to be drawn
 class VertexArray(object):
 	def __init__(self):
 		self._id = glGenVertexArrays(1)

@@ -32,6 +32,8 @@ class RenderHandler(object):
 
 		#Examples (and internal, acceptable bases)
 		module_dict['shapes/Polygon'.lower()] = shapes.Polygon
+		module_dict['shapes/Shape'.lower()] = shapes.Shape
+		module_dict['shapes/MultiplePolygons'.lower()] = shapes.MultiplePolygons
 
 		#Iterate through every custom 'base' value and add it to list of acceptable bases
 		for module in modules:
@@ -62,5 +64,5 @@ class RenderHandler(object):
 			else:
 				raise InvalidRendererException(self.converted_renders['name'])
 		except(KeyError):
-			#logger.log_warning(f"Render {name} not found")
+			logger.log_warning(f"Render {name} not found")
 			pass

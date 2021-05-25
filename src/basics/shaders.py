@@ -8,6 +8,7 @@ import os
 
 logger = Logger("Application Shader")
 
+#Defines what OpenGL should do with the data given
 class ShaderProgram(object):
 	def __init__(self, vertex, fragment):
 		self.vertex = vertex
