@@ -6,22 +6,19 @@ logger = logger.Logger('Application Base')
 should_exit = False
 
 try:
-	import OpenGL
-	import OpenGL.GL
-	import OpenGL.GLUT
-	import OpenGL.GLU
+    import OpenGL
+    import OpenGL.GL
+    import OpenGL.GLU
+    import mysql.connector
+    import numpy
+    import yaml
 except(ImportError):
-	logger.log_error("You do not have the PyOpenGL library installed. Please install the module using 'pip install PyOpenGL PyOpenGL_accelerate'.")
-	should_exit = True
-
-try:
-	import mysql.connector
-except(ImportError):
-	logger.log_error("You do not have the MySQL Connector library installed. Please install the module using 'pip install mysql-connector-python'.")
-	should_exit = True
+    logger.log_error("You do not have the required modules install. Please install them using 'pip install -r requirements.txt'") 
+    should_exit = True
 
 if should_exit:
-	exit()
+    logger.log_info("If 'pip install ...' does not work, try 'python -m pip install ...'")
+    exit()
 
 from . import application, logger, constants, basics, rendering, game
 
