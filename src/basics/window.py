@@ -1,28 +1,41 @@
 #basics/window.py
-
-from OpenGL.GLUT import *
+import glfw
 from OpenGL.GL import *
 from typing import Callable, Tuple, List
+from ..logger import Logger
 
+logger = Logger("Application Window")
 #Uses GLUT to initialize a window and sets the OpenGL context (internally) to that window
 class Screen(object):
 
-	xy_tuple = Tuple[int, int]
+    xy_tuple = Tuple[int, int]
 
-	def __init__(self, title:str, size: xy_tuple, render_function:Callable, window_position: xy_tuple = (100, 100)) -> None:
-		glutInit()
-		glutInitDisplayMode(GLUT_RGBA)
-		glutInitWindowSize(size[0], size[1])
-		glutInitWindowPosition(window_position[0], window_position[1])
-		self.wind = glutCreateWindow(title)
-		glutDisplayFunc(render_function)
-		glutIdleFunc(render_function)
-		self.clear(0,0,0,0)
-		glEnable(GL_BLEND)
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    def __init__(self, title:str, size: xy_tuple, window_position: xy_tuple = (100, 100)) -> None:
+        if not glfw.init():
+            logger.log_error("GLFW could not initialize")
+            quit()
+        self.wind = glfw.create_window(size[0], size[1], title, None, None)
+        if not self.wind:
+            logger.log_error("GLFW Window could not be created")
+            glfw.terminate()
+            quit()
+        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
+        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
+        glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, GL_TRUE)
+        glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
+        glfw.make_context_current(self.wind)
+        glfw.swap_interval(1)
+        self.clear(0,0,0,0)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-	def clear(self, r, g, b, a):
-		glClearColor(r,g,b,a)
+    def main_loop(self, render_function:Callable):
+        while not glfw.window_should_close(self.wind):
+            render_function()
+            glfw.swap_buffers(self.wind)
+            glfw.poll_events()
+        glfw.terminate()
 
-	def swap_buffers(self):
-		glutSwapBuffers()
+
+    def clear(self, r, g, b, a):
+        glClearColor(r,g,b,a)

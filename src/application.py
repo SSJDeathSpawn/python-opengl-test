@@ -2,7 +2,7 @@
 
 from OpenGL.GL import *
 from OpenGL.GL.shaders import *
-from OpenGL.GLUT import *
+from glfw import *
 from OpenGL.GLU import *
 from .basics.window import *
 from .constants import *
@@ -39,7 +39,6 @@ class Application(object):
         [self.tick_funcs[i][0](**self.tick_funcs[i][1]) for i in self.tick_funcs]
         [i[0](**i[1]) for i in self.render_calls]
         self.render_calls = []
-        self.screen.swap_buffers()
 
     #Do stuff like initializing the screen and load all the available render files
     #All the game related stuff should be done in game.py
@@ -49,7 +48,7 @@ class Application(object):
         self.render_handler = RenderHandler()
         [self.render_handler.register_renderer(i) for i in self.internal_renderers]
         self.render_handler.load_renders()
-        self.screen = Screen("Project", (SCREEN_WIDTH, SCREEN_HEIGHT), self.render)
+        self.screen = Screen("Project", (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.render_handler.convert_renders()
         self.screen.clear(0,0.1,0.1,1)
         self.default_shader = self.compile_shaders()
@@ -81,4 +80,4 @@ class Application(object):
         return program
 
     def run(self):
-        glutMainLoop()
+        self.screen.main_loop(self.render)

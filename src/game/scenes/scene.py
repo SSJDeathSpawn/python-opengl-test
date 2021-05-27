@@ -56,4 +56,4 @@ class TestScene(Scene):
     def tick(self):
         r = 0.2
         self.objects['Player'].pos = [r * math.cos(self.theta), r * math.sin(self.theta)]
-        self.theta += 0.001
+        self.theta += 0.01
