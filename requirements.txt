@@ -1,0 +1,6 @@
+pyyaml
+PyOpenGL
+PyOpenGL_accelerate
+numpy
+glfw
+mysql-connector-python
