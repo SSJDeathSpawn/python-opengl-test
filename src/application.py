@@ -12,6 +12,7 @@ from .basics.shaders import ShaderProgram, Shader
 from .rendering.renderers.shapes import *
 import time
 import os
+from .utils import random_id
 
 from .logger import *
 from OpenGL.GL import *
@@ -21,49 +22,63 @@ logger = Logger("Application Main")
 
 class Application(object):
 
-	internal_renderers = [
-		Shape,
-		Polygon,
-		MultiplePolygons
-	]
+    internal_renderers = [
+        Shape,
+        Polygon,
+        MultiplePolygons
+    ]
 
-	# [ [function1, kwargs1],
-	#	[function2, kwargs2] ]
-	render_calls = []
+    # [ [function1, kwargs1],
+    #	[function2, kwargs2] ]
+    render_calls = []
+    tick_funcs = {}
 
-	#Render whatever the game tells you to
-	def render(self):
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-		[i[0](**i[1]) for i in self.render_calls]
-		self.screen.swap_buffers()
+    #Render whatever the game tells you to
+    def render(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        [self.tick_funcs[i][0](**self.tick_funcs[i][1]) for i in self.tick_funcs]
+        [i[0](**i[1]) for i in self.render_calls]
+        self.render_calls = []
+        self.screen.swap_buffers()
 
-	#Do stuff like initializing the screen and load all the available render files
-	#All the game related stuff should be done in game.py
-	def __init__(self):
-		logger.log_info("Initialization step")
-		start_time = time.time()
-		self.render_handler = RenderHandler()
-		[self.render_handler.register_renderer(i) for i in self.internal_renderers]
-		self.render_handler.load_renders()
-		self.screen = Screen("Project", (SCREEN_WIDTH, SCREEN_HEIGHT), self.render)
-		self.render_handler.convert_renders()
-		self.screen.clear(0,0.1,0.1,1)
-		self.default_shader = self.compile_shaders()
+    #Do stuff like initializing the screen and load all the available render files
+    #All the game related stuff should be done in game.py
+    def __init__(self):
+        logger.log_info("Initialization step")
+        start_time = time.time()
+        self.render_handler = RenderHandler()
+        [self.render_handler.register_renderer(i) for i in self.internal_renderers]
+        self.render_handler.load_renders()
+        self.screen = Screen("Project", (SCREEN_WIDTH, SCREEN_HEIGHT), self.render)
+        self.render_handler.convert_renders()
+        self.screen.clear(0,0.1,0.1,1)
+        self.default_shader = self.compile_shaders()
 
-	#Convenience function to get render_handler
-	def get_render_handler(self):
-		return self.render_handler
+    #Convenience function to get render_handler
+    def get_render_handler(self):
+        return self.render_handler
+    
+    def add_render_call(self, func, arguments) -> str:
+        self.render_calls.append([func, arguments])
 
-	#TODO: Accpet vertex and fragment shaders as arguments
-	def compile_shaders(self):
-		logger.log_info("Compiling shaders...")
-		vertex = Shader('../res/shaders/vertex.glsl', GL_VERTEX_SHADER)
-		fragment = Shader('../res/shaders/fragment.glsl', GL_FRAGMENT_SHADER)
-		vertex.compile()
-		fragment.compile()
-		program = ShaderProgram(vertex, fragment)
-		program.compile()
-		return program
+    def add_tick_func(self, func, arguments) -> str:
+        tmp = random_id()
+        self.tick_funcs[tmp] = [func, arguments]
+        return tmp
 
-	def run(self):
-		glutMainLoop()
+    def remove_tick_func(self, token_id):
+        self.tick_funcs.pop(token_id)
+
+    #TODO: Accpet vertex and fragment shaders as arguments
+    def compile_shaders(self):
+        logger.log_info("Compiling shaders...")
+        vertex = Shader('../res/shaders/vertex.glsl', GL_VERTEX_SHADER)
+        fragment = Shader('../res/shaders/fragment.glsl', GL_FRAGMENT_SHADER)
+        vertex.compile()
+        fragment.compile()
+        program = ShaderProgram(vertex, fragment)
+        program.compile()
+        return program
+
+    def run(self):
+        glutMainLoop()

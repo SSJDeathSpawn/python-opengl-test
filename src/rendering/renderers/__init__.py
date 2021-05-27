@@ -1,5 +1,5 @@
 #rendering/renderer/__init__.py
 
-from . import shapes, text
+from . import shapes
 
-__all__ = ['shapes', 'text']
+__all__ = ['shapes']

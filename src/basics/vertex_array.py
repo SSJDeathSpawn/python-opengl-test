@@ -40,6 +40,7 @@ class VertexArray(object):
 		for i in range(len(elements)):
 			element = elements[i]
 			glEnableVertexAttribArray(i)
+                        #The command that copies vertex buffer data into vertex array object
 			glVertexAttribPointer(i, element[1], element[0], element[2], vl.stride, ctypes.c_void_p(offset))
 			offset += element[1] * get_size_from_type(element[0])
 		vb.unbind()
