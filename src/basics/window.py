@@ -5,7 +5,7 @@ from typing import Callable, Tuple, List
 from ..logger import Logger
 
 logger = Logger("Application Window")
-#Uses GLUT to initialize a window and sets the OpenGL context (internally) to that window
+#Uses GLFW to initialize a window and sets the OpenGL context to that window
 class Screen(object):
 
     xy_tuple = Tuple[int, int]
@@ -23,6 +23,7 @@ class Screen(object):
         glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
         glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, GL_TRUE)
         glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
+        #This is the line that sets the context
         glfw.make_context_current(self.wind)
         glfw.swap_interval(1)
         self.clear(0,0,0,0)
@@ -39,3 +40,6 @@ class Screen(object):
 
     def clear(self, r, g, b, a):
         glClearColor(r,g,b,a)
+    
+    def set_input_handler(self, input_handler):
+        glfw.set_key_callback(self.wind, input_handler.handle_input)

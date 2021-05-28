@@ -11,15 +11,12 @@ class Game(object):
         self.current_scene = None
         self.application = Application()
         self.load_scene(TestScene())
-        self.application.add_tick_func(self.tick, {}) 
         self.application.run()
 
     def load_scene(self, scene):
+        if self.current_scene:
+            self.application.remove_tick_func(self.current_scene.tick)
+            self.application.input_handler.unsubscribe(self.current_scene.handle_input)
         self.current_scene = scene
-    
-    def render(self, application, shader):
-        self.current_scene.render_objects(self.application, self.application.default_shader)
-
-    def tick(self):
-        self.render(self.application, self.application.default_shader)
-        self.current_scene.tick()
+        self.application.add_tick_func(self.current_scene.tick, {'application': self.application, 'shader': self.application.default_shader}) 
+        self.application.input_handler.subscribe(self.current_scene.handle_input)
