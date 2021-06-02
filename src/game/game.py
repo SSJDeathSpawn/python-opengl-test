@@ -2,6 +2,7 @@
 from ..application import Application 
 from ..logger import Logger
 from .scenes.scene import TestScene
+import time
 logger = Logger("Game")
 
 #Game layer of stuff, doesn't need to bother with backend stuff
@@ -10,7 +11,10 @@ class Game(object):
     def __init__(self):
         self.current_scene = None
         self.application = Application()
-        self.load_scene(TestScene())
+        start_time = time.time()
+        logger.log_info("Loading Scene")
+        self.load_scene(TestScene(5))
+        logger.log_info(f"Loading took {time.time() - start_time} seconds.")
         self.application.run()
 
     def load_scene(self, scene):

@@ -25,8 +25,6 @@ class Player(GameObject):
             norm_inp = inp/(np.linalg.norm(inp)) #You thought you could get extra speed from holding both a vertical and horizontal key, didn't you?
             mov = norm_inp * self.mov_speed
             self.pos = list(mov+self.pos)
-            logger.log_info(self.pos)
-        self.render(application, shader)
-
-    def handle_input(self, window, key, scancode, action, mods):
-        pass
+        application.camera.move_to_pos(self.pos)
+        if application.camera.should_be_rendered(self.pos):
+            self.render(application, shader)

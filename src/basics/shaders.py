@@ -2,9 +2,11 @@
 
 from OpenGL.GL.shaders import *
 from OpenGL.GL import *
+from OpenGL.arrays import *
 from ..logger import *
 import os
-
+import numpy as np
+import ctypes
 
 logger = Logger("Application Shader")
 
@@ -21,7 +23,19 @@ class ShaderProgram(object):
 		glUseProgram(self.id)
 
 	def unbind(self):
-		glUseProgram(self.id)
+		glUseProgram(0)
+
+	def send_uniform_data(self, location:str, data):
+		try:
+			loc = glGetUniformLocation(self.id, location)
+			if (loc != -1):
+				self.bind()
+				if (type(data) == np.ndarray):
+					if (data.shape == (4,4)):
+						glUniformMatrix4fv(loc, 1, GL_FALSE, data)
+		except NameError as e:
+			logger.log_warning(e)
+			logger.log_warning("Uniform data is sent before shader is initialized.")
 
 class Shader(object):
 	#Goes to the file with the given path and copies it to self.raw_code

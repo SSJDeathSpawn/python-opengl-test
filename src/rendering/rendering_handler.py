@@ -23,6 +23,7 @@ class RenderHandler(object):
     def load_renders(self, *render_loaders: Type[BaseRenderLoader]):
         #Get base render files
         self.loaded_renders.extend(MainRenderLoader.get_renders())
+        #logger.log_info(MainRenderLoader.get_renders())
         #Get custom render files
         for i in render_loaders:
             if issubclass(i, BaseRenderLoader):
@@ -59,6 +60,7 @@ class RenderHandler(object):
         try:
             #logger.log_info(self.rendering_registry.is_valid_renderer(self.converted_renders[name]))
             if(self.rendering_registry.is_valid_renderer(self.converted_renders[name])):
+                #logger.log_info(f"{name} = {self.converted_renders[name]}")
                 self.converted_renders[name].change_pos(pos)
                 self.converted_renders[name].render(shader)
             else:
