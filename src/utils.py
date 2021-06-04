@@ -12,9 +12,6 @@ def arr2norm(x:int,y:int) -> List[float]:
 	norm_y = actual_y / (SCREEN_HEIGHT/2) - 1
 	return [norm_x, norm_y]
 
-def random_id():
-    temp = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(7)])
-    while temp in generated_ids:
-        temp = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(7)])
-    generated_ids.append(temp)
-    return temp
+def coor2norm(co:float, rev:bool, max_size:int) -> float:
+	norm_co = (max_size - co if rev else co) / max_size - 1
+	return norm_co

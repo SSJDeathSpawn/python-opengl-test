@@ -27,8 +27,13 @@ class Screen(object):
         glfw.make_context_current(self.wind)
         glfw.swap_interval(1)
         self.clear(0,0,0,0)
-        #glEnable(GL_BLEND)
-        glDepthFunc(GL_NEVER);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(-1, 1, -1, 1, -1.25, 1.25);
+        glEnable(GL_DEPTH_TEST)
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_BLEND)
+        glAlphaFunc(GL_GREATER, 0.9);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     def main_loop(self, render_function:Callable):

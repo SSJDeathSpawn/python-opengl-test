@@ -11,6 +11,7 @@ import ctypes
 import itertools
 from collections import deque
 from ...logger import Logger
+from ... import constants
 
 logger = Logger('renderers/shapes')
 #TODO: Fix Tree on top of player, play to see
@@ -25,26 +26,24 @@ class Shape(Renderer):
 	def define_shape(self, pos:np.ndarray, indices:np.ndarray, colours:np.ndarray):
 		self.pos_data = pos
 		self.col_data = colours
+		self.ib.put_data(ctypes.sizeof(GLuint)*len(indices), indices)
 		vertex_data = np.array(np.append(self.pos_data, self.col_data, axis=1),dtype=np.float32).flatten()
 		vl = VertexArrayLayout()
-		vl.push(2, GL_FLOAT, False)
+		vl.push(3, GL_FLOAT, False)
 		vl.push(4, GL_FLOAT, False)
-		self.vb.put_data(len(vertex_data) * 4, vertex_data)
-		self.vao.set_layout(self.vb, vl)
-		self.ib.put_data(ctypes.sizeof(GLuint)*len(indices), indices)
+		self.vb.put_data(len(vertex_data) * 4*3, vertex_data)
+		self.vao.set_layout(self.vb, self.ib, vl)
 
 	def change_pos(self, offset):
+		offset = np.array(list(offset) + [offset[1]])
 		mod_pos_data = self.pos_data + offset
 		vertex_data = np.array(np.append(mod_pos_data, self.col_data, axis=1),dtype=np.float32).flatten()
 		self.vb.change_data(len(vertex_data) * ctypes.sizeof(GLfloat), vertex_data)
 
 	def render(self, shader: ShaderProgram):
-		#glLoadIdentity()
 		self.vao.bind()
 		shader.bind()
-		self.ib.bind()
 		glDrawElements(GL_TRIANGLES, self.ib.count, GL_UNSIGNED_INT, ctypes.c_void_p(0))
-		self.ib.unbind()
 		shader.unbind()
 		self.vao.unbind()
 
@@ -53,7 +52,11 @@ class Polygon(Shape):
 		super().__init__()
 		norm_pos = [arr2norm(*i) for i in pos]
 		indices = self.triangulate(norm_pos.copy())
-		col = [i for i in col] if np.array(col).ndim > 1 else [col]*sides
+		col = col if np.array(col).ndim > 1 else [col]*sides
+		lowest_y = pos[0][1]
+		for i in pos:
+			lowest_y = i[1] if i[1] < lowest_y else lowest_y
+		norm_pos = [i+[coor2norm(lowest_y, True, constants.SCREEN_HEIGHT)] for i in norm_pos]
 		self.define_shape(np.array(norm_pos, dtype=np.float32), np.array(indices, dtype=np.uintc), np.array(col, dtype=np.float32))
 
 	#This one in particular had me needing to research 
@@ -66,6 +69,7 @@ class Polygon(Shape):
 
 	#Explanation of the method will be given in my project (hopefully).
 	def triangulate(self, pos:list) -> list:
+		#logger.log_info(pos)
 		pointer = 0
 		indices = []
 		length = len(pos)
@@ -124,16 +128,28 @@ class Polygon(Shape):
 		return indices
 
 #Used to draw multiple non-connected polygons onto the screen
-#TODO: Make this batch render rather than individually draw call
-class MultiplePolygons(Renderer):
+class MultiplePolygons(Polygon):
 
 	def __init__(self, count: int, **kwargs):
-		self.polygons=[]
-		for i in range(1, count+1):
-			self.polygons.append(Polygon(kwargs['side' + str(i)], kwargs['pos' + str(i)], kwargs['col'+str(i)]))
+		# self.polygons=[]
+		# for i in range(1, count+1):
+		# 	self.polygons.append(Polygon(kwargs['side' + str(i)], kwargs['pos' + str(i)], kwargs['col'+str(i)]))
+		Shape.__init__(self)
+		vertex_data = []
+		index_data = []
+		col_data = []
+		offset = 0
+		#First ever coordinates
+		lowest_y = kwargs['pos1'][0][1]
+		for i in range(1,count+1):
+			vertex_data += [arr2norm(*i) for i in kwargs['pos' + str(i)]]
+			for j in kwargs['pos'+str(i)]:
+				lowest_y = j[1] if j[1] < lowest_y else lowest_y
+			index_data += [i+offset for i in self.triangulate([arr2norm(*i) for i in kwargs['pos' + str(i)]])]
+			col = kwargs['col'+str(i)]
+			col_data += col if np.array(col).ndim > 1 else [col]*kwargs['side' + str(i)]
+			offset += kwargs['side' + str(i)]
+		vertex_data = [i+[coor2norm(lowest_y, True, constants.SCREEN_HEIGHT)] for i in vertex_data] 
+		self.define_shape(np.array(vertex_data, dtype=np.float32), np.array(index_data, dtype=np.uintc), np.array(col_data, dtype=np.float32))
 
-	def render(self, shader: ShaderProgram):
-		[i.render(shader) for i in self.polygons]
 
-	def change_pos(self, offset):
-		[i.change_pos(offset) for i in self.polygons]

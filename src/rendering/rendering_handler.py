@@ -8,7 +8,6 @@ from ..basics.shaders import ShaderProgram
 from .renders import BaseRenderLoader, MainRenderLoader
 from ..exceptions import InvalidRendererException
 from typing import Type
-from ..utils import random_id
 
 logger = Logger("Rendering Handler")
 class RenderHandler(object):

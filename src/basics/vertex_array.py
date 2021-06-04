@@ -28,15 +28,16 @@ class VertexArrayLayout(object):
     def get_elements(self):
         return self.elements.copy()
 
-#Stores the data that is provided to Vertex Buffer. Can be used to instantly load and offload data. 
+#Stores the data that is provided to Vertex & Index Buffer. Can be used to instantly load and offload data. 
 #Easier than loading into Vertex Buffer whenever an object is required to be drawn
 class VertexArray(object):
     def __init__(self):
         self._id = glGenVertexArrays(1)
 
-    def set_layout(self, vb: VertexBuffer, vl: VertexArrayLayout):
+    def set_layout(self, vb: VertexBuffer, ib: IndexBuffer, vl: VertexArrayLayout):
         self.bind()
         vb.bind()
+        ib.bind()
         elements = vl.get_elements()
         offset = 0
         for i in range(len(elements)):
@@ -46,6 +47,7 @@ class VertexArray(object):
             glVertexAttribPointer(i, element[1], element[0], element[2], vl.stride, ctypes.c_void_p(offset))
             offset += element[1] * get_size_from_type(element[0])
         vb.unbind()
+        ib.bind()
         self.unbind()
 
     def bind(self):
